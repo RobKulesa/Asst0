@@ -7,6 +7,7 @@ typedef enum {WORD, DECIMAL, OCTAL, HEX, FLOAT, OPERATOR} Token;
 
 // printSubString function prototype
 int printSubString(Token token, char* str, int begIndex, int endIndex);
+int* findToken(char* str, int index);
 //char findOperatorName(char* operatorString);
 /*
  * 1. Word Token
@@ -52,6 +53,7 @@ int printSubString(Token token, char* str, int begIndex, int endIndex) {
         case HEX: printf("hex: "); break;
         case FLOAT: printf("float: "); break;
         case OPERATOR:
+            printf("operator: ");
             //char* operatorName;
             // TODO: Add findoperatorname to print type of operator (lots of switch case statements prolly)
             //printf("%s: ", findOperatorName(str[begIndex]));
@@ -65,28 +67,53 @@ int printSubString(Token token, char* str, int begIndex, int endIndex) {
     printf("\n");
     return 0;
 }
-
-int main(int argc, char **argv) {
-    //1. first figure out length of passed string
-    int length = strlen(argv[1]);
-    int i = 0;
-    //2. iterate through characters of string to tokenize
-    for(i = 0; i < length; ++i) {
-        char curr = argv[1][i]; // define pointer for current character
-        // TODO: make sure token isn't sizeof operator
-        if(isalpha(curr)) { // if start of token is alphabetical
-            int begIndex = i; // mark first index of WORD token
-            int counter = 1; // counter for length of WORD token, first one is already alphabetical 
-            curr = argv[1][++i]; // move to next char
-            while(isalnum(curr)) { // iterate through string until nonalphanumeric character found to find length of WORD token
-                curr = argv[1][++i];
-                ++counter;
-            }
-            printSubString(WORD, argv[1], begIndex, begIndex + counter);
+/*
+ * When do we know what kind of token the string is?
+ *  - WORD: If the first character is alphabetic, we know it is either a word, or the sizeof operator
+ *  - 
+ */
+int* findToken(char* str, int index) {
+    int *array = malloc(2*sizeof(int)); // malloc space for 2 ints to be returned [token type, last index of token]
+    char curr = str[index]; // current character being assessed
+    if(isalpha(curr)) { // if token is alphabetic character
+        array[0] = WORD; // pre-emptively assign token type to WORD
+        int i = index + 1; // at the end of the while loop, i will have the last index of the WORD token
+        while(isalnum(curr)) curr = str[++i];
+        array[1] = i; //assign [,last index of token] to i
+        char *wordToken = malloc((i - index + 2)*sizeof(char)); // move below lines into modular helper function?
+        wordToken[strlen(wordToken) - 1] = '\0';                // basically just checks if string is equal to "sizeof" and sets to operator if true
+        memcpy(wordToken, &str[index], (i - index + 1)*sizeof(char));
+        if(strcmp(wordToken, "sizeof") == 0) {
+            array[0] = OPERATOR;
         }
     }
+    else if(isnum(curr)) {
+        array[0] = DECIMAL; // pre-emptively assign token type to DECIMAL
+        if(str[index] == '0') {
+            if((str[index + 1] == 'x' || str[index + 1] == 'X') && isxdigit(str[index + 2])) {
+                array[0] = HEX;
+                int i = index + 2;
+                curr = str[i];
+                while(isxdigit(curr)) {
+                    
+                }     
+            }
+        }
+    }
+    return array;
+}
 
-        
+int main(int argc, char **argv) {
+    int length = strlen(argv[1]);
+    int i = 0;
+    for(i = 0; i < length; ++i) {
+        char curr = argv[1][i];
+        while(isspace(curr)) curr = argv[1][++i]; // iterate until we find a non-whitespace character
+        int *array = findToken(argv[1], i); // call find token to get pointer to array that stores [token type, last index of token]
+        printSubString(array[0], argv[1], i, array[1]); // call printSubString to output our tokens
+        i = array[1];
+    }
+
     // test cases from pdf
     // char test1[] = "123stuff";
     // char test2[] = "123 stuff";

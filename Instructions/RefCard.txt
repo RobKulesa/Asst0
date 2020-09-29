@@ -7,7 +7,7 @@ operator		name
 
 .				structure member
 ->				structure pointer
-sizeof		sizeof
+sizeof			sizeof
 ,				comma
 
 !				negate
@@ -17,7 +17,7 @@ sizeof		sizeof
 ^				bitwise XOR
 |				bitwise OR
 
-++			increment
+++				increment
 --				decrement
 +				addition
 /				division
