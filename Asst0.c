@@ -61,7 +61,7 @@ int printSubString(Token token, char* str, int begIndex, int endIndex) {
             break;
     }
     int i;
-    for(i = begIndex; i < endIndex; i++) {
+    for(i = begIndex; i <= endIndex; i++) {
         printf("%c", str[i]);
     }
     printf("\n");
@@ -78,7 +78,7 @@ int* findToken(char* str, int index) {
     if(isalpha(curr)) { // if token is alphabetic character
         array[0] = WORD; // pre-emptively assign token type to WORD
         int i = index + 1; // at the end of the while loop, i will have the last index of the WORD token
-        while(isalnum(curr)) curr = str[++i];
+        while(isalnum(curr) && !(isspace(str[i+1]) || str[i+1] == '\0')) curr = str[++i];
         array[1] = i; //assign [,last index of token] to i
         char *wordToken = malloc((i - index + 2)*sizeof(char)); // move below lines into modular helper function?
         wordToken[strlen(wordToken) - 1] = '\0';                // basically just checks if string is equal to "sizeof" and sets to operator if true
@@ -87,7 +87,7 @@ int* findToken(char* str, int index) {
             array[0] = OPERATOR;
         }
     }
-    else if(isnum(curr)) {
+    else if(isdigit(curr)) {
         array[0] = DECIMAL; // pre-emptively assign token type to DECIMAL
         if(str[index] == '0') {
             if((str[index + 1] == 'x' || str[index + 1] == 'X') && isxdigit(str[index + 2])) {
