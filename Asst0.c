@@ -104,7 +104,10 @@ int* findToken(char* str, int index) {
             else if(isoctal(str[index+1])) {
                 array[0] = OCTAL; // assume octal unless we find a non-octal digit in string
                 int i = index + 1;
-                while(isoctal(str[i]) && !(isspace(str[i+1]) || str[i+1] == '\0')) ++i;
+                while(isdigit(str[i]) && !(isspace(str[i+1]) || str[i+1] == '\0')) {
+                    if(!isoctal(str[i])) array[0] = DECIMAL;
+                    ++i;
+                }    
                 array[1] = i;
             }
             else { // decimal numbers that begin with 0
