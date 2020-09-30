@@ -5,9 +5,12 @@
 
 typedef enum {WORD, DECIMAL, OCTAL, HEX, FLOAT, OPERATOR} Token;
 
-// printSubString function prototype
+// begin prototypes
+int isoctal(char digit);
 int printSubString(Token token, char* str, int begIndex, int endIndex);
 int* findToken(char* str, int index);
+// end prototypes
+
 //char findOperatorName(char* operatorString);
 /*
  * 1. Word Token
@@ -42,9 +45,11 @@ int* findToken(char* str, int index);
  */
 
 
-
+int isoctal(char digit) {
+    if(digit >= '0' && digit <= '7') return 1;
+    return 0;
+}
 int printSubString(Token token, char* str, int begIndex, int endIndex) {
-
     //Print out the Token type
     switch(token){
         case WORD: printf("word: "); break;
@@ -77,7 +82,7 @@ int* findToken(char* str, int index) {
     char curr = str[index]; // current character being assessed
     if(isalpha(curr)) { // if token is alphabetic character
         array[0] = WORD; // pre-emptively assign token type to WORD
-        int i = index + 1; // at the end of the while loop, i will have the last index of the WORD token
+        int i = index; // at the end of the while loop, i will have the last index of the WORD token
         while(isalnum(curr) && !(isspace(str[i+1]) || str[i+1] == '\0')) curr = str[++i];
         array[1] = i; //assign [,last index of token] to i
         char *wordToken = malloc((i - index + 2)*sizeof(char)); // move below lines into modular helper function?
@@ -90,13 +95,22 @@ int* findToken(char* str, int index) {
     else if(isdigit(curr)) {
         array[0] = DECIMAL; // pre-emptively assign token type to DECIMAL
         if(str[index] == '0') {
-            if((str[index + 1] == 'x' || str[index + 1] == 'X') && isxdigit(str[index + 2])) {
-                array[0] = HEX;
+            if((str[index + 1] == 'x' || str[index + 1] == 'X') && isxdigit(str[index + 2])) { // hexadecimal number
+                array[0] = HEX; // assign token type to HEX
                 int i = index + 2;
-                curr = str[i];
-                while(isxdigit(curr)) {
-                    
-                }     
+                while(isxdigit(str[i+1]) && !(isspace(str[i+1]) || str[i+1] == '\0')) ++i;
+                array[1] = i;     
+            }
+            else if(isoctal(str[index+1])) {
+                array[0] = OCTAL; // assume octal unless we find a non-octal digit in string
+                int i = index + 1;
+                while(isoctal(str[i]) && !(isspace(str[i+1]) || str[i+1] == '\0')) ++i;
+                array[1] = i;
+            }
+            else { // decimal numbers that begin with 0
+                int i = index;
+                while(isdigit(str[i]) && !(isspace(str[i+1]) || str[i+1] == '\0')) ++i;
+                array[1] = i;
             }
         }
     }
@@ -108,10 +122,14 @@ int main(int argc, char **argv) {
     int i = 0;
     for(i = 0; i < length; ++i) {
         char curr = argv[1][i];
-        while(isspace(curr)) curr = argv[1][++i]; // iterate until we find a non-whitespace character
+        while(isspace(curr)) {
+            curr = argv[1][++i]; // iterate until we find a non-whitespace character
+        }
+        if(!(i < length)) return 0;    
         int *array = findToken(argv[1], i); // call find token to get pointer to array that stores [token type, last index of token]
         printSubString(array[0], argv[1], i, array[1]); // call printSubString to output our tokens
         i = array[1];
+        
     }
 
     // test cases from pdf
