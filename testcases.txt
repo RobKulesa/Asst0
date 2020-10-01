@@ -1,5 +1,8 @@
-This is words only
+Parsing white space with words only
+Thisshouldonlybeoneword
 testing3mb3dd3d1ntegers in w0rd55
+This is words only
+
 454545amber454545
 5670X757575
 123stuff 123 stuff stuff123
