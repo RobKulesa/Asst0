@@ -44,6 +44,95 @@ int* findToken(char* str, int index);
  ******** White Space Characters
  */
 
+char* idOperator(char* operator){
+    int size = strlen(operator);
+    char c = operator[0];
+    switch(size){
+        case 1: 
+            switch(c){
+                case '(': return "left parenthesis";
+                case ')': return "right parenthesis";
+                case '[': return "left bracket";
+                case ']': return "right bracket";
+                case '.': return "structure member";
+                case ',': return "comma";
+                case '^': return "bitwise XOR";
+                case '!': return "negate";
+                case '~': return "1s complement";
+                case '|': return "bitwise OR";
+                case '+': return "addition";
+                case '/': return "division";
+                case '?': return "conditional true";
+                case ':': return "conditional false";
+                case '<': return "less than test";
+                case '>': return "greater than test";
+                case '=': return "assignment";
+                case '&': return "AND/address operator";
+                case '-': return "minus/subtract operator";
+                case '*': return "multiply/dereference operator";
+            }
+            break;
+        case 2:
+            switch(c){
+                case '-': 
+                    if (operator[1] == '>')
+                        return "structure pointer";
+                    else if(operator[1] == '-')
+                        return "decrement";
+                    else
+                        return "minus equals";
+                    break;
+                case '>': 
+                    if(operator[1] == '>')
+                        return "shift right";
+                    else
+                        return "greater than or equal test";
+                    break;
+                case '<': 
+                    if(operator[1] == '<')
+                        return "shift left";
+                    else
+                        return "less than or equal test";
+                    break;
+                case '+': 
+                    if(operator[1] == '+')
+                        return "increment";
+                    else
+                        return "plus equals";
+                    break;
+                case '|': 
+                    if(operator[1] == '|')
+                        return "logical OR";
+                    else
+                        return "bitwise OR equals";
+                    break;
+                case '&': 
+                    if(operator[1] == '&')
+                        return "logical AND";
+                    else
+                        return "bitwise AND equals";
+                    break;
+                case '=': return "equality test";
+                case '!': return "inequality test";
+                case '*': return "times equals";
+                case '/': return "divide equals";
+                case '%': return "mod equals";
+                case '^': return "bitwise XOR equals";
+            }
+            break;
+        case 3: 
+            switch(c){
+                case '>': return "shift right equals";
+                case '<': return "shift left equals";
+            }
+            break;
+        case 6:
+            return "sizeof";
+        default:
+            return "error";
+    }
+    return "error";
+}
 
 int isoctal(char digit) {
     if(digit >= '0' && digit <= '7') return 1;
@@ -51,6 +140,14 @@ int isoctal(char digit) {
 }
 int printSubString(Token token, char* str, int begIndex, int endIndex) {
     //Print out the Token type
+    char substring[endIndex - begIndex + 2]; 
+    int i;
+    for(i = begIndex; i <= endIndex; ++i) {
+        substring[i] = str[i];
+    }
+    substring[endIndex-begIndex + 1] = '\0';
+    char* operatorName;
+
     switch(token){
         case WORD: printf("word: "); break;
         case DECIMAL: printf("decimal: "); break;
@@ -58,25 +155,18 @@ int printSubString(Token token, char* str, int begIndex, int endIndex) {
         case HEX: printf("hex: "); break;
         case FLOAT: printf("float: "); break;
         case OPERATOR:
-            printf("operator: ");
-            //char* operatorName;
-            // TODO: Add findoperatorname to print type of operator (lots of switch case statements prolly)
-            //printf("%s: ", findOperatorName(str[begIndex]));
-            //free(operatorName);
+            operatorName = idOperator(substring);
+            printf("%s: ", operatorName);
             break;
     }
-    int i;
+    
     for(i = begIndex; i <= endIndex; i++) {
         printf("%c", str[i]);
     }
     printf("\n");
     return 0;
 }
-/*
- * When do we know what kind of token the string is?
- *  - WORD: If the first character is alphabetic, we know it is either a word, or the sizeof operator
- *  - 
- */
+
 int* findToken(char* str, int index) {
     int *array = malloc(2*sizeof(int)); // malloc space for 2 ints to be returned [token type, last index of token]
     char curr = str[index]; // current character being assessed
@@ -99,9 +189,10 @@ int* findToken(char* str, int index) {
                 array[0] = HEX; // assign token type to HEX
                 int i = index + 2;
                 while(isxdigit(str[i+1]) && !(isspace(str[i+1]) || str[i+1] == '\0')) ++i;
-                array[1] = i;     
+                array[1] = i;
+                return array;     
             }
-            else if(isoctal(str[index+1])) {
+            else if(isdigit(str[index+1])) {
                 array[0] = OCTAL; // assume octal unless we find a non-octal digit in string
                 int i = index + 1;
                 while(isdigit(str[i]) && !(isspace(str[i+1]) || str[i+1] == '\0')) {
@@ -109,14 +200,22 @@ int* findToken(char* str, int index) {
                     ++i;
                 }    
                 array[1] = i;
+                return array;
             }
-            else { // decimal numbers that begin with 0
-                int i = index;
-                while(isdigit(str[i]) && !(isspace(str[i+1]) || str[i+1] == '\0')) ++i;
-                array[1] = i;
-            }
+            // some simple cases that need to be accounted for:
+            // float = 032.90e-10 <-- this case will be accounted for just not inside this block
+            // "0<non-octal, decimal digit><either octal or decimal>" works as expected, but
+            // decimal numbers that do not start with 0 are not accounted for
+        } else {
+            //first char of token is a digit that is not 0
         }
+        if(isdigit(str[index])) {
+            //check for float or decimal number
+        }        //at this point in the code, token is either a DECIMAL or FLOAT
+        
+
     }
+    // at this point in code, token is either an operator or garabage 
     return array;
 }
 
@@ -132,14 +231,8 @@ int main(int argc, char **argv) {
         int *array = findToken(argv[1], i); // call find token to get pointer to array that stores [token type, last index of token]
         printSubString(array[0], argv[1], i, array[1]); // call printSubString to output our tokens
         i = array[1];
-        
+        free(array);
     }
-
-    // test cases from pdf
-    // char test1[] = "123stuff";
-    // char test2[] = "123 stuff";
-    // char test3[] = "array[xyz ] += pi 3.14159e-10";
-    
     return 0;
 }
 
