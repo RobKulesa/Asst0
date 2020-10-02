@@ -45,6 +45,7 @@ int* findToken(char* str, int index);
  */
 
 char* idOperator(char* operator){
+    
     int size = strlen(operator);
     char c = operator[0];
     switch(size){
@@ -140,10 +141,11 @@ int isoctal(char digit) {
 }
 int printSubString(Token token, char* str, int begIndex, int endIndex) {
     //Print out the Token type
+
     char substring[endIndex - begIndex + 2]; 
     int i;
     for(i = begIndex; i <= endIndex; ++i) {
-        substring[i] = str[i];
+        substring[i-begIndex] = str[i];
     }
     substring[endIndex-begIndex + 1] = '\0';
     char* operatorName;
@@ -159,8 +161,10 @@ int printSubString(Token token, char* str, int begIndex, int endIndex) {
             printf("%s: ", operatorName);
             break;
         case GARBAGE:
+            printf("Garbage: ");
             break;
         default:
+            printf("TOKEN ID ERROR: ");
             break;
     }
     
@@ -178,6 +182,8 @@ int* findToken(char* str, int index) {
         array[0] = WORD; // pre-emptively assign token type to WORD
         int i = index; // at the end of the while loop, i will have the last index of the WORD token
         while(isalnum(curr) && !(isspace(str[i+1]) || str[i+1] == '\0')) curr = str[++i];
+        if(!isalnum(curr)) //! Changed because while I was
+            i--;
         array[1] = i; //assign [,last index of token] to i
         char *wordToken = malloc((i - index + 2)*sizeof(char)); // move below lines into modular helper function?
         wordToken[strlen(wordToken) - 1] = '\0';                // basically just checks if string is equal to "sizeof" and sets to operator if true
@@ -196,7 +202,7 @@ int* findToken(char* str, int index) {
                 array[1] = i;
                 return array;     
             }
-            else if(isdigit(str[index+1])) { 
+            else if(isdigit(str[index+1])) { //! The first digit is 0 and the next character is numeric
                 array[0] = OCTAL; // assume octal unless we find a non-octal digit in string
                 //int i = index + 1;
                 int i = index;
@@ -227,10 +233,50 @@ int* findToken(char* str, int index) {
                         ++i;
                     }
                     
+
                     //TODO - Fix this conditional
-                    if(str[i] != 'e' || str[i+1] == '\0'|| (str[i+2] == '\0' && !isdigit(str[i+1])) ||  !(str[i+2] != '\0' && (str[i+1] == '+' || str[i+1] == '-') && isdigit(str[i+2])))//If the first non-numeric character found is not the letter e or if the string terminates too early, terminate token
+                                                                                //THIS IS JUST ONE BIG CONDITIONAL LOL
+                    if(str[i] != 'e' || str[i+1] == '\0'|| !(isdigit(str[i+1]) || (str[i+2]!= '\0' && isdigit(str[i+2]) && (str[i+1] == '+' || str[i+1] == '-')))  )//If the first non-numeric character found is not the letter e or if the string terminates too early, terminate token
                     {   
                         
+                        if(!isdigit(str[i]))
+                            --i;
+                        array[1] = i;
+                        return array;
+                    }
+                    else{
+                        //TODO - Fix this stuff too
+                        
+
+
+                        if(str[i+1] == '+' || str[i+1] == '-')
+                            i+=1; // If we do detect 'e', '-', and a digit following, skip to the index of the digit
+                        do{
+                            ++i;
+                        }while(isdigit(str[i+1]) && !(isspace(str[i+1]) || str[i+1] == '\0'));
+                        
+                        
+                        array[1] = i;
+                        return array;
+                    }
+                }    
+            } else{ //! The first number is 0, and the next character is not a digit
+                if(str[index+1] == '\0' || str[index+1] != '.'||(str[index+1] == '.' && (str[index+2] == '\0' || !isdigit(str[index+2])))){
+                    array[0] = DECIMAL;
+                    array[1] = index;
+                }else{
+                    int i = index + 1;
+                    array[0] = FLOAT;
+                    ++i; //Currently, str[i] points to the '.' character. We need to increment this.
+                    while(isdigit(str[i]) && !(isspace(str[i+1]) || str[i+1] == '\0')){ //Iterates until non-numeric value is found
+                        ++i;
+                    }
+                    
+                    //TODO - Fix this conditional
+                    if(str[i] != 'e' || str[i+1] == '\0'|| !(isdigit(str[i+1]) || (str[i+2]!= '\0' && isdigit(str[i+2]) && (str[i+1] == '+' || str[i+1] == '-')))  )//If the first non-numeric character found is not the letter e or if the string terminates too early, terminate token
+                    {   
+                        if(!isdigit(str[i]))
+                            --i;
                         array[1] = i;
                         return array;
                     }
@@ -246,16 +292,9 @@ int* findToken(char* str, int index) {
                         array[1] = i;
                         return array;
                     }
-                }    
-            } else{
-                if(str[index+1] != '\0' || str[index+1] != '.'||(str[index+1] == '.' && (str[index+2] == '\0' || !isdigit(str[index+2])))){
-                    array[0] = DECIMAL;
-                    array[1] = index;
-                }else{
-
                 }
             }
-        } else {
+        } else {//! THE FIRST CHARACTER IS NOT 0
             array[0] = DECIMAL;
             int i = index;
             do{
@@ -275,9 +314,11 @@ int* findToken(char* str, int index) {
                     }
                     
                     //TODO fix this conditional
-                    if(str[i] != 'e' || str[i+1] == '\0'|| (str[i+2] == '\0' && !isdigit(str[i+1])) ||  !(str[i+2] != '\0' && (str[i+1] == '+' || str[i+1] == '-') && isdigit(str[i+2])))//If the first non-numeric character found is not the letter e or if the string terminates too early, terminate token
+                    if(str[i] != 'e' || str[i+1] == '\0'|| !(isdigit(str[i+1]) || (str[i+2]!= '\0' && isdigit(str[i+2]) && (str[i+1] == '+' || str[i+1] == '-')))  )//If the first non-numeric character found is not the letter e or if the string terminates too early, terminate token
                     {   
                         
+                        if(!isdigit(str[i]))
+                            --i;
                         array[1] = i;
                         return array;
                     }
@@ -296,14 +337,123 @@ int* findToken(char* str, int index) {
 
             
         }
-        
-        
-
     }
     // at this point in code, token is either an operator or garbage
-    //array[0] = OPERATOR; // assume token is an operator
+    
     //iterate through start of token until 
     // <<=garbage 
+    else{
+        array[0] = OPERATOR; // assume token is an operator
+        switch(curr){
+            case '(': array[1] = index; return array;
+            case ')': array[1] = index; return array;
+            case '[': array[1] = index; return array;
+            case ']': array[1] = index; return array;
+            case '.': array[1] = index; return array;
+            case ',': array[1] = index; return array;
+            case '~': array[1] = index; return array;
+            case '?': array[1] = index; return array;
+            case ':': array[1] = index; return array;
+            case '%':                                               
+                if(str[index+1] == '\0' || str[index+1] != '='){ //! Really weird, but if you look at the RefCard.txt, there is no dedicated opeator for %. There's only %=. Weird.
+                    array[0] = GARBAGE;
+                    array[1] = index;
+                    return array;
+                }else{
+                    array[1] = index+1;
+                    return array;
+                }
+            case '=':
+                if(str[index+1] == '\0' || str[index+1] != '=')
+                    array[1] = index;
+                else
+                    array[1] = index+1;
+                return array;
+            case '!':
+                if(str[index+1] == '\0' || str[index+1] != '=')
+                    array[1] = index;
+                else
+                    array[1] = index+1;
+                return array;
+            case '*':
+                if(str[index+1] == '\0' || str[index+1] != '=')
+                    array[1] = index;
+                else
+                    array[1] = index+1;
+                return array;
+            case '/':                                               //! Code needs to be different to account for comment extra credit
+                if(str[index+1] == '\0' || str[index+1] != '=')
+                    array[1] = index;
+                else
+                    array[1] = index+1;
+                return array;
+            case '^':                   
+                if(str[index+1] == '\0' || str[index+1] != '=')
+                    array[1] = index;
+                else
+                    array[1] = index+1;
+                return array;
+            case '-':
+                if(str[index+1] == '\0')
+                    array[1] = index;
+                else if(str[index+1] == '>' || str[index+1] == '-' || str[index+1] == '=')
+                    array[1] = index+1;
+                else
+                    array[1] = index;
+                return array;
+            case '+':
+                if(str[index+1] == '\0')
+                    array[1] = index;
+                else if(str[index+1] == '+' || str[index+1] == '=')
+                    array[1] = index+1;
+                else
+                    array[1] = index;
+                return array;  
+            case '|':
+                if(str[index+1] == '\0')
+                    array[1] = index;
+                else if(str[index+1] == '|' || str[index+1] == '=')
+                    array[1] = index+1;
+                else
+                    array[1] = index;
+                return array;
+            case '&':
+                if(str[index+1] == '\0')
+                    array[1] = index;
+                else if(str[index+1] == '&' || str[index+1] == '=')
+                    array[1] = index+1;
+                else
+                    array[1] = index;
+                return array;
+            case '>': 
+                if(str[index+1] == '\0')
+                    array[1] = index;
+                else if(str[index+1] == '>' || str[index+1] == '='){
+                    array[1] = index+1;
+                    if(str[index+1] == '>' && str[index+2] != '\0' && str[index+2] == '=')
+                        array[1]++;
+                } else
+                    array[1] = index;
+                return array;
+            case '<': 
+                if(str[index+1] == '\0')
+                    array[1] = index;
+                else if(str[index+1] == '<' || str[index+1] == '='){
+                    array[1] = index+1;
+                    if(str[index+1] == '<' && str[index+2] != '\0' && str[index+2] == '=')
+                        array[1]++;
+                } else
+                    array[1] = index;
+                return array;
+            default:
+                array[0] = GARBAGE;
+                array[1] = index;
+                return array;
+        }
+    }
+    
+    
+
 
     return array;
 }
