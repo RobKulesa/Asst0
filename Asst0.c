@@ -7,45 +7,12 @@ typedef enum {WORD, DECIMAL, OCTAL, HEX, FLOAT, OPERATOR, GARBAGE} Token;
 
 // begin prototypes
 int isoctal(char digit);
-int printSubString(Token token, char* str, int begIndex, int endIndex);
+void printSubString(Token token, char* str, int begIndex, int endIndex);
 int* findToken(char* str, int index);
+char* idOperator(char* operator);
 // end prototypes
 
-//char findOperatorName(char* operatorString);
-/*
- * 1. Word Token
- *      Ends when ____ is found
- *      - White Space
- *      - Operator
- * 2. Decimal token
- *      Ends when ____ is found
- *      - White Space
- *      - Operator
- *      - Alphabetic Char found
- * 3. Octal Token
- *      Ends when ____ is found
- *      - White Space
- *      - Operator
- *      - Alphabetic Char found
- * 4. Hex Token
- *      Ends when ____ is found
- *      - White Space
- *      - Operator
- *      - Alphabetic Char found that isn't a-f
- * 5. Float
- *      Ends when ____ is found
- *      - White Space
- *      - Operator
- *      - Alphabetic Char Found
- *      - BUT NOT WHEN "e-" is found because this is scientific notation
- * 6. Operator
- *      Ends
- *      - Immediately After
- ******** White Space Characters
- */
-
 char* idOperator(char* operator){
-    
     int size = strlen(operator);
     char c = operator[0];
     switch(size){
@@ -139,9 +106,9 @@ int isoctal(char digit) {
     if(digit >= '0' && digit <= '7') return 1;
     return 0;
 }
-int printSubString(Token token, char* str, int begIndex, int endIndex) {
-    //Print out the Token type
 
+void printSubString(Token token, char* str, int begIndex, int endIndex) {
+    if(token == GARBAGE) return;
     char substring[endIndex - begIndex + 2]; 
     int i;
     for(i = begIndex; i <= endIndex; ++i) {
@@ -149,30 +116,28 @@ int printSubString(Token token, char* str, int begIndex, int endIndex) {
     }
     substring[endIndex-begIndex + 1] = '\0';
     char* operatorName;
-
     switch(token){
-        case WORD: printf("word: "); break;
-        case DECIMAL: printf("decimal: "); break;
-        case OCTAL: printf("octal: "); break;
-        case HEX: printf("hex: "); break;
-        case FLOAT: printf("float: "); break;
+        case WORD: printf("word: \""); break;
+        case DECIMAL: printf("decimal: \""); break;
+        case OCTAL: printf("octal: \""); break;
+        case HEX: printf("hex: \""); break;
+        case FLOAT: printf("float: \""); break;
         case OPERATOR:
             operatorName = idOperator(substring);
-            printf("%s: ", operatorName);
+            printf("%s: \"", operatorName);
             break;
         case GARBAGE:
-            printf("Garbage: ");
             break;
         default:
             printf("TOKEN ID ERROR: ");
             break;
     }
-    
     for(i = begIndex; i <= endIndex; i++) {
         printf("%c", str[i]);
     }
+    printf("%s", "\"");
     printf("\n");
-    return 0;
+    return;
 }
 
 int* findToken(char* str, int index) {
@@ -191,6 +156,7 @@ int* findToken(char* str, int index) {
         if(strcmp(wordToken, "sizeof") == 0) {
             array[0] = OPERATOR;
         }
+        return array;
     }
     else if(isdigit(curr)) {
         array[0] = DECIMAL; // pre-emptively assign token type to DECIMAL
@@ -212,66 +178,45 @@ int* findToken(char* str, int index) {
                         array[0] = DECIMAL; //pre-emptively assigns token type to DECIMAL
                     ++i;
                 }
-                if(isspace(str[i+1]) || str[i+1] == '\0'){
-                    if(!isoctal(str[i])) 
-                        array[0] = DECIMAL;
+                if(isspace(str[i+1]) || str[i+1] == '\0') {
+                    if(!isoctal(str[i])) array[0] = DECIMAL;
                 }
-                
-            
-
                 //If we are dealing with an octal or a decimal (not float), we want to end the function as soon as possible
                 if(str[i] != '.' || (str[i]== '.' && (str[i+1] == '\0' || !isdigit(str[i+1])) )) { 
-                    if(!isdigit(str[i]))
-                    --i;
+                    if(!isdigit(str[i])) --i;
                     array[1] = i;
                     return array;
-                }
-                else{ //If the first non-numeric character found is '.', then the entire token we are dealing with is a float, and we must figure out where it terminates
+                } else { //If the first non-numeric character found is '.', then the entire token we are dealing with is a float, and we must figure out where it terminates
                     array[0] = FLOAT;
                     ++i; //Currently, str[i] points to the '.' character. We need to increment this.
-                    while(isdigit(str[i]) && !(isspace(str[i+1]) || str[i+1] == '\0')){ //Iterates until non-numeric value is found
-                        ++i;
-                    }
-                    
-
-                    //TODO - Fix this conditional
-                                                                                //THIS IS JUST ONE BIG CONDITIONAL LOL
-                    if(str[i] != 'e' || str[i+1] == '\0'|| !(isdigit(str[i+1]) || (str[i+2]!= '\0' && isdigit(str[i+2]) && (str[i+1] == '+' || str[i+1] == '-')))  )//If the first non-numeric character found is not the letter e or if the string terminates too early, terminate token
-                    {   
-                        
-                        if(!isdigit(str[i]))
-                            --i;
+                    while(isdigit(str[i]) && !(isspace(str[i+1]) || str[i+1] == '\0')) ++i; //Iterates until non-numeric value is found
+                    if(str[i] != 'e' || str[i+1] == '\0'|| !(isdigit(str[i+1]) || (str[i+2]!= '\0' && isdigit(str[i+2]) && (str[i+1] == '+' || str[i+1] == '-')))  ) { //If the first non-numeric character found is not the letter e or if the string terminates too early, terminate token
+                        if(!isdigit(str[i])) --i;
                         array[1] = i;
                         return array;
                     }
                     else{
                         //TODO - Fix this stuff too
-                        
-
-
-                        if(str[i+1] == '+' || str[i+1] == '-')
-                            i+=1; // If we do detect 'e', '-', and a digit following, skip to the index of the digit
+                        if(str[i+1] == '+' || str[i+1] == '-') i+=1; // If we do detect 'e', '-', and a digit following, skip to the index of the digit
                         do{
                             ++i;
-                        }while(isdigit(str[i+1]) && !(isspace(str[i+1]) || str[i+1] == '\0'));
-                        
-                        
+                        }
+                        while(isdigit(str[i+1]) && !(isspace(str[i+1]) || str[i+1] == '\0'));
                         array[1] = i;
                         return array;
                     }
                 }    
-            } else{ //! The first number is 0, and the next character is not a digit
+            } else { //! The first number is 0, and the next character is not a digit
                 if(str[index+1] == '\0' || str[index+1] != '.'||(str[index+1] == '.' && (str[index+2] == '\0' || !isdigit(str[index+2])))){
                     array[0] = DECIMAL;
                     array[1] = index;
-                }else{
+                } else {
                     int i = index + 1;
                     array[0] = FLOAT;
                     ++i; //Currently, str[i] points to the '.' character. We need to increment this.
                     while(isdigit(str[i]) && !(isspace(str[i+1]) || str[i+1] == '\0')){ //Iterates until non-numeric value is found
                         ++i;
                     }
-                    
                     //TODO - Fix this conditional
                     if(str[i] != 'e' || str[i+1] == '\0'|| !(isdigit(str[i+1]) || (str[i+2]!= '\0' && isdigit(str[i+2]) && (str[i+1] == '+' || str[i+1] == '-')))  )//If the first non-numeric character found is not the letter e or if the string terminates too early, terminate token
                     {   
@@ -286,9 +231,8 @@ int* findToken(char* str, int index) {
                             i+=1; // If we do detect 'e', '-', and a digit following, skip to the index of the digit
                         do{
                             ++i;
-                        }while(isdigit(str[i+1]) && !(isspace(str[i+1]) || str[i+1] == '\0'));
-                        
-                        
+                        }
+                        while(isdigit(str[i+1]) && !(isspace(str[i+1]) || str[i+1] == '\0'));
                         array[1] = i;
                         return array;
                     }
@@ -299,11 +243,10 @@ int* findToken(char* str, int index) {
             int i = index;
             do{
                 ++i;
-            }while(isdigit(str[i]) && !(isspace(str[i+1]) || str[i+1] == '\0'));
-
+            }
+            while(isdigit(str[i]) && !(isspace(str[i+1]) || str[i+1] == '\0'));
             if(str[i] != '.' || (str[i]== '.' && (str[i+1] == '\0' || !isdigit(str[i+1])) )) {    
-                if(!isdigit(str[i]))
-                    --i;
+                if(!isdigit(str[i])) --i;
                 array[1] = i;
                 return array;
             }else{ //If the first non-numeric character found is '.', then the entire token we are dealing with is a float, and we must figure out where it terminates
@@ -312,11 +255,9 @@ int* findToken(char* str, int index) {
                     while(isdigit(str[i]) && !(isspace(str[i+1]) || str[i+1] == '\0')){ //Iterates until non-numeric value is found
                         ++i;
                     }
-                    
                     //TODO fix this conditional
                     if(str[i] != 'e' || str[i+1] == '\0'|| !(isdigit(str[i+1]) || (str[i+2]!= '\0' && isdigit(str[i+2]) && (str[i+1] == '+' || str[i+1] == '-')))  )//If the first non-numeric character found is not the letter e or if the string terminates too early, terminate token
                     {   
-                        
                         if(!isdigit(str[i]))
                             --i;
                         array[1] = i;
@@ -328,21 +269,12 @@ int* findToken(char* str, int index) {
                         do{
                             ++i;
                         }while(isdigit(str[i+1]) && !(isspace(str[i+1]) || str[i+1] == '\0'));
-                        
-                        
                         array[1] = i;
                         return array;
                     }
                 }
-
-            
         }
-    }
-    // at this point in code, token is either an operator or garbage
-    
-    //iterate through start of token until 
-    // <<=garbage 
-    else{
+    } else {
         array[0] = OPERATOR; // assume token is an operator
         switch(curr){
             case '(': array[1] = index; return array;
@@ -381,7 +313,7 @@ int* findToken(char* str, int index) {
                 else
                     array[1] = index+1;
                 return array;
-            case '/':                                               //! Code needs to be different to account for comment extra credit
+            case '/':                                            
                 if(str[index+1] == '\0' || str[index+1] != '=')
                     array[1] = index;
                 else
@@ -451,10 +383,8 @@ int* findToken(char* str, int index) {
                 return array;
         }
     }
-    
-    
-
-
+    array[0] = GARBAGE;
+    array[1] = index;
     return array;
 }
 
@@ -470,27 +400,24 @@ int main(int argc, char **argv) {
         while(isspace(curr)) {
             curr = argv[1][++i]; // iterate until we find a non-whitespace character
         }
-        
-/*         if(i + 1 < length && curr == '/' && argv[1][i+1] == '/') {
-            while(curr != '\n' && curr != '\r') {
+        if(i + 1 < length && curr == '/' && argv[1][i+1] == '/') {
+            while(curr != '\n' && i < length) {
                 curr = argv[1][++i];
             } 
         }
         if(i + 1 < length && curr == '/' && argv[1][i+1] == '*') {
-            while(curr != '*' && argv[1][i-1] != '/') {
+            while(!(curr == '/' && argv[1][i-1] == '*') && i < length) {
                 curr = argv[1][++i];
             }
-        } */
-        
+            ++i;
+        } 
         if(!(i < length)) return 0;    
         int *array = findToken(argv[1], i); // call find token to get pointer to array that stores [token type, last index of token]
         printSubString(array[0], argv[1], i, array[1]); // call printSubString to output our tokens
-        
         i = array[1];
         free(array);
         deBug++;
     }
-    //printf("\n%d\n", i);
     return 0;
 }
 
