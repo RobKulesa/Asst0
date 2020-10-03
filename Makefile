@@ -1,4 +1,4 @@
-OUTPUT=Asst0
+OUTPUT=tokenizer
 CFLAGS=-g -Wall -Werror -std=c99
 LFLAGS=-lm
 

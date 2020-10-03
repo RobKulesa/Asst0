@@ -1,8 +1,218 @@
-Parsing white space with words only
-Thisshouldonlybeoneword
-testing3mb3dd3d1ntegers in w0rd55
-This is words only
+./tokenizer
 
-454545amber454545
-5670X757575
-123stuff 123 stuff stuff123
+./tokenizer "Word 95 095 0777 0x0123456789abcdefg 06.12 0.3456 7.86909e60 06.68E69 0.6969e69 6.969E+69 06.6e+8 0.69e+69 6.969e-69"
+word: "Word"
+decimal integer: "95"
+decimal integer: "095"
+octal integer: "077"
+hexacdeicmal integer: "0x0123456789abcdef"
+word: "g"
+floating point: "06.12"
+floating point: "0.3456"
+floating point: "7.86909e60"
+floating point: "06.68E69"
+floating point: "0.6969e69"
+floating point: "6.969E+69"
+floating point: "06.6e+8"
+floating point: "0.69e+69"
+floating point: "6.969e-69"
+
+./tokenizer "()[].,^"
+left parenthesis: "("
+right parenthesis: ")"
+left bracket: "["
+right bracket: "]"
+structure member: "."
+comma: ","
+bitwise XOR: "^"
+
+./tokenizer "3.1e+-34"
+floating point: "3.1"
+word: "e"
+addition: "+"
+minus/subtract operator: "-"
+decimal integer: "34"
+
+./tokenizer "3.1e+5.20xFAL30"
+floating point: "3.1e+5"
+structure member: "."
+decimal integer: "20"
+word: "xFAL30"
+
+./tokenizer $'this is normal //but this 300 will be /*0xFF*/ commented\nand this 0xFA will be <<== uncommented'
+word: "this"
+word: "is"
+word: "normal"
+word: "and"
+word: "this"
+hex integer: "0xFA"
+word: "will"
+word: "be"
+shift left equals: "<<="
+assignment: "="
+word: "uncommented"
+
+./tokenizer $'this is normal /*but this 300 will be 0xFF// commented*/ //hello\nand this 0xFA will be <<== uncommented'
+word: "this"
+word: "is"
+word: "normal"
+word: "and"
+word: "this"
+hex integer: "0xFA"
+word: "will"
+word: "be"
+shift left equals: "<<="
+assignment: "="
+word: "uncommented"
+
+./tokenizer “array[xyz ] += pi 3.14159e-10”
+word: ”array”
+left bracket: ”[”
+word: ”xyz”
+right bracket: ”]”
+plusequals: ”+=”
+word: ”pi”
+float: ”3.14159e-10”
+
+./tokenzier "numbers 972 0x972 A8 0XA8 XA8 0972 072"
+word: "numbers"
+decimal integer: "972"
+hexadecimal integer: "0x972"
+word: "A8"
+hexadecimal integer: "0XA8"
+word: "XA8"
+decimal integer: "0972"
+octal integer: "072"
+
+./tokenizer "3.1 03.1 x3.1 0x3.1 30x1.x"
+floating point: "3.1"
+floating point: "03.1"
+word: "x3"
+structure member: "."
+decimal integer: "1"
+hexadecimal integer: "0x3"
+structure member: "."
+decimal integer: "1"
+decimal integer: "30"
+word: "x1"
+structure member: "x"
+word: "x"
+
+./tokenizer "today is a beautiful day"
+word: “today”
+word: “is”
+word: “a”
+word: “beautiful”
+word: “day”
+
+./tokenizer "0x4356abdc 0777 [] "
+hexadecimal integer: "0x4356abdc"
+octal integer: "0777"
+left bracket: "["
+right bracket: "]"
+
+./tokenizer "+,++,+++,++++,+++++,++=,+++=="
+addition: "+"
+comma: ","
+increment: "++"
+comma: ","
+increment: "++"
+addition: "+"
+comma: ","
+increment: "++"
+increment: "++"
+comma: ","
+increment: "++"
+increment: "++"
+addition: "+"
+comma: ","
+increment: "++"
+assignment: "="
+comma: ","
+increment: "++"
+plus equals: "+="
+assignment: "="
+
+./tokenizer "=()[].,^!~|+/?:<>&-*->---=>=>><=<<+++=|||=&&&===!=*=/=%=^=>>=<<=sizeof"
+assigntment: "="
+left parenthesis: "("
+right parenthesis: ")"
+left bracket: "["
+right bracket: "]"
+structure member: "."
+comma: ","
+bitwise XOR: "^"
+negate: "!"
+1s complement: "~"
+bitwise OR: "|"
+addition: "+"
+division: "/"
+conditional true: "?"
+conditional false: ":"
+less than test: "<"
+greater than test: ">"
+AND/address operator: "&"
+minus/subtract operator: "-"
+multiply/dereference operator: "*"
+structure pointer: "->"
+decrement: "--"
+minus equals: "-="
+greater than or equal test: ">="
+shift right: ">>"
+less than or equal test: "<="
+shift left: "<<"
+increment: "++"
+plus equals: "+="
+logical OR: "||"
+bitwise OR equals: "|="
+logical AND: "&&"
+bitwise AND equals: "&="
+equality test: "=="
+inequality test: "!="
+times equals: "*="
+divide equals: "/="
+mod equals: "%="
+bitwise XOR equals: "^="
+shift right equals: ">>="
+shift left equals: "<<="
+sizeof: "sizeof"
+
+./tokenizer "word1 w0rd2 w000rddd3"
+word: "word1"
+word: "w0rd2"
+word: "w000rddd3"
+
+./tokenizer "word1 w0rd2 098"
+word: "word1"
+word: "w0rd2"
+decimal integer: "098"
+
+./tokenizer "word1 w0rd2 0"
+word: "word1"
+word: "w0rd2"
+decimal integer: "0"
+
+./tokenizer "word1 w0rd2 067"
+word: "word1"
+word: "w0rd2"
+octal integer: "067"
+
+./tokenizer "word1 w0rd2 0.95"
+word: "word1"
+word: "w0rd2"
+floating point: "0.95"
+
+./tokenizer "word1.95"
+word: "word1"
+structure member: "."
+decimal integer: "95"
+
+./tokenizer "word0777"
+word: "word0777"
+
+./tokenizer "098470xabcdef 0x1234.2425"
+decimal integer: "098470"
+word: :xabcdef
+hex integer: "0x1234"
+structure member: "."
+decimal integer: "2425"
