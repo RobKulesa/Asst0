@@ -1,7 +1,9 @@
 ./tokenizer
 
-./tokenizer "Word 95 095 0777 0x0123456789abcdefg 06.12 0.3456 7.86909e60 06.68E69 0.6969e69 6.969E+69 06.6e+8 0.69e+69 6.969e-69"
+./tokenizer "Word 03. 95 095 0777 0x0123456789abcdefg 06.12 0.3456 7.86909e60 06.68E69 0.6969e69 6.969E+69 06.6e+8 0.69e+69 6.969e-69"
 word: "Word"
+octal integer: "03"
+structure member: "."
 decimal integer: "95"
 decimal integer: "095"
 octal integer: "077"

@@ -203,10 +203,11 @@ int* findToken(char* str, int index) {
                     ++i;
                 }
                 if(isspace(str[i+1]) || str[i+1] == '\0') {
-                    if(!isoctal(str[i])) array[0] = DECIMAL;
+                    if(isdigit(str[i]) && !isoctal(str[i])) 
+                        array[0] = DECIMAL;
                 }
                 //If we are dealing with an octal or a decimal (not float), we want to end the function as soon as possible
-                if(str[i] != '.' || (str[i]== '.' && (str[i+1] == '\0' || !isdigit(str[i+1])) )) { 
+                if(str[i] != '.' || (str[i]== '.' && (str[i+1] == '\0' || !isdigit(str[i+1]))) ) { 
                     if(!isdigit(str[i])) --i;
                     array[1] = i;
                     return array;
@@ -232,6 +233,8 @@ int* findToken(char* str, int index) {
                         array[1] = i;
                         return array;
                     }
+                    array[1] = i;
+                    return array;
                 }    
             } else { //! The first number is 0, and the next character is not a digit
                 if(str[index+1] == '\0' || str[index+1] != '.'|| (str[index+1] == '.' && (str[index+2] == '\0' || !isdigit(str[index+2]))) ) {
